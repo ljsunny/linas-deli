@@ -34,17 +34,31 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
                                         Pageable pageable);
 
 
-    @Query("SELECT DISTINCT p FROM Product p " +
-            "LEFT JOIN FETCH p.category c " +
-            "LEFT JOIN FETCH p.productDetails pd " +
-            "LEFT JOIN FETCH pd.animal a " +
-            "LEFT JOIN FETCH pd.country co " +
-            "WHERE p.inStock = true AND " +
-            "(:keyword IS NULL OR p.productName LIKE %:keyword% OR p.description LIKE %:keyword%) AND " +
-            "(:category IS NULL OR c.categoryName = :category)")
-    Page<Product> searchProductsInStock(@Param("keyword") String keyword, @Param("category") String category, Pageable pageable);
+    // 1. 상품 ID만 페이징
+    @Query("""
+    SELECT p.pid
+    FROM Product p
+    LEFT JOIN p.category c
+    WHERE p.inStock = true
+      AND (:keyword IS NULL OR p.productName LIKE %:keyword% OR p.description LIKE %:keyword%)
+      AND (:category IS NULL OR c.categoryName = :category)
+    ORDER BY p.createdAt DESC
+""")
+    Page<Long> findProductIds(@Param("keyword") String keyword,
+                              @Param("category") String category,
+                              Pageable pageable);
 
-
+    // 2. 실제 상품과 컬렉션 fetch
+    @Query("""
+    SELECT DISTINCT p
+    FROM Product p
+    LEFT JOIN FETCH p.category c
+    LEFT JOIN FETCH p.productDetails pd
+    LEFT JOIN FETCH pd.animal a
+    LEFT JOIN FETCH pd.country co
+    WHERE p.pid IN :ids
+""")
+    List<Product> findProductsWithDetails(@Param("ids") List<Long> ids);
 
 
 

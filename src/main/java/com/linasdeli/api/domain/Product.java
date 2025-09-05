@@ -4,6 +4,7 @@ import com.linasdeli.api.domain.enums.AllergyType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,7 +24,8 @@ public class Product {
     @Column(length = 500) private String imageUrl;
     @Column(nullable = false) private String productName;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
+    @BatchSize(size = 20)
     @CollectionTable(name = "product_allergy", joinColumns = @JoinColumn(name = "pid"))
     @Enumerated(EnumType.STRING)
     @Column(name = "allergy_type")
@@ -36,11 +38,11 @@ public class Product {
     @Column(length = 1000) private String servingSuggestion;
     @Column(nullable = false) private boolean inStock = false;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "supplier", nullable = false)
     private Supplier supplier;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category", nullable = false)
     private Category category;
 

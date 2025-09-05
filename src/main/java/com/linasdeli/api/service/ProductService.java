@@ -11,6 +11,7 @@ import com.linasdeli.api.repository.*;
 import com.linasdeli.api.util.FileUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -240,26 +241,30 @@ public class ProductService {
 
     // ✅ Customer - 상품 전체 조회 (카테고리+검색)
     public Page<ProductWithDetailsDto> getProductsForCustomer(Pageable pageable, String category, String keyword) {
-        Pageable fixedPageable = PageRequest.of(pageable.getPageNumber(), 12);
-        Page<Product> products = productRepository.searchProductsInStock(keyword, category, fixedPageable);
+        Page<Long> idsPage = productRepository.findProductIds(keyword, category, pageable);
+        List<Product> products = productRepository.findProductsWithDetails(idsPage.getContent());
 
-        Page<ProductWithDetailsDto> dtoPage = products.map(p -> new ProductWithDetailsDto(
-                p.getPid(),
-                p.getImageName(),
-                p.getImageUrl(),
-                p.getProductName(),
-                p.getDescription(),
-                p.getPasteurized(),
-                p.getIngredientsImageName(),
-                p.getIngredientsImageUrl(),
-                p.getCategory().getCategoryName(),
-                p.getProductDetails().isEmpty()? null : p.getProductDetails().get(0).getAnimal().getAnimalName(),
-                p.getAllergies(), // 여기가 핵심!
-                p.getProductDetails().isEmpty()? null : p.getProductDetails().get(0).getCountry().getCountryName(),
-                p.getServingSuggestion(),
-                p.isInStock()
-        ));
-        return dtoPage;
+        List<ProductWithDetailsDto> dtoList = products.stream()
+                .map(p -> new ProductWithDetailsDto(
+                        p.getPid(),
+                        p.getImageName(),
+                        p.getImageUrl(),
+                        p.getProductName(),
+                        p.getDescription(),
+                        p.getPasteurized(),
+                        p.getIngredientsImageName(),
+                        p.getIngredientsImageUrl(),
+                        p.getCategory().getCategoryName(),
+                        p.getProductDetails().isEmpty() ? null : p.getProductDetails().get(0).getAnimal().getAnimalName(),
+                        p.getAllergies(),
+                        p.getProductDetails().isEmpty() ? null : p.getProductDetails().get(0).getCountry().getCountryName(),
+                        p.getServingSuggestion(),
+                        p.isInStock()
+                ))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(dtoList, pageable, idsPage.getTotalElements());
+
     }
 
 
