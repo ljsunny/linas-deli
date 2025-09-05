@@ -14,4 +14,6 @@ public class Platter {
     private Integer platterId;
 
     @Column(nullable = false, length = 100) private String platterName;
+
+    @Column(nullable = false, length = 100) private Long amount;
 }

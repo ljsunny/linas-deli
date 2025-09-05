@@ -1,8 +1,8 @@
 package com.linasdeli.api.controller;
 
-import com.linasdeli.api.domain.Order;
 import com.linasdeli.api.dto.OrderDTO;
 import com.linasdeli.api.dto.request.OrderRequestDTO;
+import com.linasdeli.api.dto.request.DonationRequestDTO;
 import com.linasdeli.api.service.EmailService;
 import com.linasdeli.api.service.OrderService;
 import com.stripe.Stripe;
@@ -38,6 +38,80 @@ public class StripeController {
         Stripe.apiKey = stripeApiKey;
     }
 
+    // 후원 감사 이메일 발송 메서드 - 후원자에게도 이메일 발송
+    private void sendDonationThankYouEmails(String donorName, String amount, String message, String donorEmail) {
+        try {
+            // 1. 사장님께 후원 알림 이메일
+            String ownerSubject = "💝 New Donation Received - Lina's Deli";
+            String ownerBody = String.format("""
+                <h2>💝 New Donation Received!</h2>
+                <p>Dear Lina's Deli Team,</p>
+                <p>Great news! You have received a new donation.</p>
+                
+                <h3>Donation Details:</h3>
+                <ul>
+                    <li><strong>Amount:</strong> %s CAD</li>
+                    <li><strong>Donor:</strong> %s</li>
+                    <li><strong>Email:</strong> %s</li>
+                    <li><strong>Message:</strong> %s</li>
+                    <li><strong>Date:</strong> %s</li>
+                </ul>
+                
+                <p>Thank you for continuing to serve our wonderful community!</p>
+                
+                <p>Best regards,<br>
+                Lina's Deli Payment System</p>
+                """,
+                    amount,
+                    donorName.isEmpty() ? "Anonymous" : donorName,
+                    donorEmail != null ? donorEmail : "Not provided",
+                    message.isEmpty() ? "No message" : message,
+                    new java.util.Date()
+            );
+
+            emailService.sendEmail("linasdeli@gmail.com", ownerSubject, ownerBody);
+            log.info("📧 Owner notification email sent for donation");
+
+            // 2. 후원자에게 감사 이메일 발송
+            if (donorEmail != null && !donorEmail.trim().isEmpty()) {
+                String donorSubject = "Thank you for supporting Lina's Deli! 💝";
+                String donorBody = String.format("""
+                    <h2>💝 Thank you for your support!</h2>
+                    <p>Dear %s,</p>
+                    
+                    <p>Thank you so much for your generous donation of <strong>%s</strong> to Lina's Deli!</p>
+                    
+                    <p>Your support means the world to us and helps us continue serving our wonderful community with delicious food and warm hospitality.</p>
+                    
+                    <p>We are truly grateful for customers like you who make our family business possible.</p>
+                    
+                    <p>With heartfelt appreciation,<br>
+                    <strong>The Lina's Deli Team</strong></p>
+                    
+                    <p><em>P.S. We'd love to see you again soon! 🥪❤️</em></p>
+                    
+                    <hr>
+                    <p><small>
+                    <strong>Visit us at:</strong> 1689 Johnston St, Vancouver, BC V6H 3S2<br>
+                    <strong>Call us:</strong> (604) 688-8881
+                    </small></p>
+                    """,
+                        donorName.isEmpty() ? "Friend" : donorName,
+                        amount
+                );
+
+                emailService.sendEmail(donorEmail, donorSubject, donorBody);
+                log.info("📧 Thank you email sent to donor: {}", donorEmail);
+            } else {
+                log.info("ℹ️ No donor email provided, skipping donor thank you email");
+            }
+
+        } catch (Exception e) {
+            log.error("❌ Failed to send donation emails: {}", e.getMessage(), e);
+            throw e; // 에러를 다시 던져서 호출하는 곳에서 처리
+        }
+    }
+
     public StripeController(OrderService orderService, EmailService emailService) {
         this.orderService = orderService;
         this.emailService = emailService;
@@ -50,6 +124,11 @@ public class StripeController {
             "PETITE", "price_1RjCjZDurDSTecKKOwU2T5yl",
             "MEDIUM", "price_1RjCkKDurDSTecKKvJnvBFCp",
             "LARGE", "price_1RjClDDurDSTecKKJQjRL7O4"
+    );
+
+    // $1 후원만 간단하게
+    private static final Map<String, String> donationPriceMap = Map.of(
+            "DONATION_1", "price_1RjXGSDurDSTecKK5JkCFucA"  // 실제 Price ID
     );
 
     @PostMapping("/create-checkout-session")
@@ -72,6 +151,11 @@ public class StripeController {
                         .setPrice(priceId)
                         .setQuantity(1L)
                         .build())
+                .setAutomaticTax(SessionCreateParams.AutomaticTax.builder()
+                        .setEnabled(true)
+                        .build())
+                .setBillingAddressCollection(SessionCreateParams.BillingAddressCollection.REQUIRED)
+                .putMetadata("type", "order")
                 .putMetadata("orderId", String.valueOf(savedOrder.getOid()))
                 .putMetadata("email", orderRequestDTO.getEmail())
                 .build();
@@ -80,6 +164,45 @@ public class StripeController {
         log.info("Session created: {}, orderId: {}", session.getId(), savedOrder.getOid());
 
         return ResponseEntity.ok(session.getUrl());
+    }
+
+    // $1 후원 세션 생성 API
+    @PostMapping("/create-donation-session")
+    public ResponseEntity<String> createDonationSession(@RequestBody DonationRequestDTO donationRequestDTO) {
+        try {
+            log.info("Creating donation session for amount: {}", donationRequestDTO.getDonationAmount());
+
+            String priceId = donationPriceMap.get(donationRequestDTO.getDonationAmount());
+
+            if (priceId == null) {
+                log.error("Invalid donation amount: {}", donationRequestDTO.getDonationAmount());
+                return ResponseEntity.badRequest().body("Invalid donation amount");
+            }
+
+            SessionCreateParams params = SessionCreateParams.builder()
+                    .setMode(SessionCreateParams.Mode.PAYMENT)
+                    .setSuccessUrl("https://linas-deli.ca/donation-success?session_id={CHECKOUT_SESSION_ID}")
+                    .setCancelUrl("https://linas-deli.ca/order") // 주문 페이지로 다시 돌아가기
+//                    .setSuccessUrl("http://localhost:5173/donation-success?session_id={CHECKOUT_SESSION_ID}")
+//                    .setCancelUrl("http://localhost:5173/order")
+                    .addLineItem(SessionCreateParams.LineItem.builder()
+                            .setPrice(priceId)
+                            .setQuantity(1L)
+                            .build())
+                    .putMetadata("type", "donation")
+                    .putMetadata("donationAmount", donationRequestDTO.getDonationAmount())
+                    .putMetadata("donorName", donationRequestDTO.getDonorName() != null ? donationRequestDTO.getDonorName() : "Anonymous")
+                    .putMetadata("message", donationRequestDTO.getMessage() != null ? donationRequestDTO.getMessage() : "")
+                    .build();
+
+            Session session = Session.create(params);
+            log.info("Donation session created: {}, amount: {}", session.getId(), donationRequestDTO.getDonationAmount());
+
+            return ResponseEntity.ok(session.getUrl());
+        } catch (Exception e) {
+            log.error("Error creating donation session", e);
+            return ResponseEntity.internalServerError().body("Failed to create donation session");
+        }
     }
 
     @PostMapping("/webhook")
@@ -107,21 +230,54 @@ public class StripeController {
                         log.info("Metadata: {}", session.getMetadata());
 
                         if ("paid".equalsIgnoreCase(session.getPaymentStatus())) {
-                            String orderIdStr = session.getMetadata().get("orderId");
-                            log.info("Order ID from metadata: {}", orderIdStr);
+                            String type = session.getMetadata().get("type");
 
-                            if (orderIdStr != null) {
-                                Long orderId = Long.valueOf(orderIdStr);
+                            if ("donation".equals(type)) {
+                                // $1 후원 처리
+                                log.info("💝 Processing $1 donation payment");
+                                String donorName = session.getMetadata().get("donorName");
+                                String message = session.getMetadata().get("message");
 
-                                // ⚠️ 상태 변경하지 않음 - "in progress" 상태 유지
-                                log.info("💰 Payment confirmed for order: {} (status remains 'in progress')", orderId);
+                                // Stripe에서 고객 이메일 가져오기
+                                String donorEmail = null;
+                                if (session.getCustomerDetails() != null && session.getCustomerDetails().getEmail() != null) {
+                                    donorEmail = session.getCustomerDetails().getEmail();
+                                    log.info("📧 Donor email from Stripe: {}", donorEmail);
+                                } else {
+                                    log.info("ℹ️ No email provided by donor");
+                                }
 
-                                // 이메일만 발송
-                                log.info("📧 Sending payment confirmation emails for order: {}", orderId);
-                                orderService.sendPaymentConfirmationEmails(orderId);
-                                log.info("✅ Email sending process completed");
+                                log.info("💰 $1 Donation received from: {} ({})", donorName, donorEmail != null ? donorEmail : "no email");
+
+                                // 후원 감사 이메일 발송 (사장님 + 후원자)
+                                try {
+                                    log.info("📧 Sending donation thank you emails");
+                                    sendDonationThankYouEmails(donorName, "$1", message, donorEmail);
+                                    log.info("✅ Donation thank you emails sent successfully");
+                                } catch (Exception emailError) {
+                                    log.error("❌ Failed to send donation thank you emails: {}", emailError.getMessage(), emailError);
+                                }
+
+                                log.info("✅ Thank you for supporting Lina's Deli!");
+
                             } else {
-                                log.error("❌ Order ID is null in metadata!");
+                                // 기존 주문 처리
+                                String orderIdStr = session.getMetadata().get("orderId");
+                                log.info("Order ID from metadata: {}", orderIdStr);
+
+                                if (orderIdStr != null) {
+                                    Long orderId = Long.valueOf(orderIdStr);
+
+                                    // ⚠️ 상태 변경하지 않음 - "in progress" 상태 유지
+                                    log.info("💰 Payment confirmed for order: {} (status remains 'in progress')", orderId);
+
+                                    // 이메일만 발송
+                                    log.info("📧 Sending payment confirmation emails for order: {}", orderId);
+                                    orderService.sendPaymentConfirmationEmails(orderId);
+                                    log.info("✅ Email sending process completed");
+                                } else {
+                                    log.error("❌ Order ID is null in metadata!");
+                                }
                             }
                         } else {
                             log.warn("⚠️ Payment status is not 'paid': {}", session.getPaymentStatus());
@@ -199,14 +355,11 @@ public class StripeController {
         return ResponseEntity.ok("Order cancelled and status set to declined.");
     }
 
-
     @PostMapping("/payment-failed")
     public ResponseEntity<String> paymentFailed(@RequestParam String sessionId) {
         log.info("Payment failed for session {}", sessionId);
         return ResponseEntity.ok("Payment failure acknowledged");
     }
-
-    // StripeController에 추가할 메서드
 
     @PostMapping("/cancel-session")
     public ResponseEntity<String> cancelSession(@RequestBody Map<String, String> request) {
@@ -216,19 +369,28 @@ public class StripeController {
             log.info("🚫 Processing session cancellation: {}", sessionId);
 
             Session session = Session.retrieve(sessionId);
-            String orderIdStr = session.getMetadata().get("orderId");
+            String type = session.getMetadata().get("type");
 
-            if (orderIdStr != null) {
-                Long orderId = Long.valueOf(orderIdStr);
-
-                log.info("📝 Updating order {} status to declined", orderId);
-                orderService.updateOrderStatus(orderId, "decline");
-                log.info("✅ Order {} status updated to declined (no email sent)", orderId);
-
-                return ResponseEntity.ok("Order cancelled successfully");
+            if ("donation".equals(type)) {
+                // 후원 취소 처리
+                log.info("💝 Donation session cancelled: {}", sessionId);
+                return ResponseEntity.ok("Donation cancelled");
             } else {
-                log.warn("⚠️ No orderId found in cancelled session: {}", sessionId);
-                return ResponseEntity.ok("Session processed");
+                // 기존 주문 취소 처리
+                String orderIdStr = session.getMetadata().get("orderId");
+
+                if (orderIdStr != null) {
+                    Long orderId = Long.valueOf(orderIdStr);
+
+                    log.info("📝 Updating order {} status to declined", orderId);
+                    orderService.updateOrderStatus(orderId, "decline");
+                    log.info("✅ Order {} status updated to declined (no email sent)", orderId);
+
+                    return ResponseEntity.ok("Order cancelled successfully");
+                } else {
+                    log.warn("⚠️ No orderId found in cancelled session: {}", sessionId);
+                    return ResponseEntity.ok("Session processed");
+                }
             }
 
         } catch (Exception e) {
