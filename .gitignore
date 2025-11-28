@@ -1,0 +1,22 @@
+# Spring configs
+**/application.yml
+**/application.yaml
+**/application.properties
+**/application-*.yml
+**/application-*.yaml
+**/application-*.properties
+
+# Node
+fe/node_modules/
+be/node_modules/
+
+# Vite env
+fe/.env
+fe/.env.*
+
+# Dist
+fe/dist/
+
+# Gradle
+be/build/
+be/.gradle/
