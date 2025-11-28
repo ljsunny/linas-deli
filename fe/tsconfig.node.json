@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "incremental": true,  // incremental 옵션 추가
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+    "target": "ES2022",
+    "lib": ["ES2023","DOM"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    /* Enable composite project for TypeScript references */
+    "composite": true,
+
+    // JSX 지원
+    "jsx": "react-jsx",
+    "allowJs": true,
+
+    // ✅ alias 설정
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src", "vite.config.ts"]
+}

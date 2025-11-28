@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    /* Build Info for Faster Rebuilds */
+    "incremental": true,  // incremental 옵션 추가
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+
+    /* Language & Environment */
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": false,  // noEmit을 false로 설정하여 Vite에서 파일 출력 가능
+
+    /* Strictness & Type Safety */
+    "strict": true,
+    "skipLibCheck": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": false,  // ⚠️ 경고 제거용
+
+    /* Type Definitions */
+    "types": ["react", "react-dom"]
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "./tsconfig.node.json" }
+  ]
+}
