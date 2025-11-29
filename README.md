@@ -14,6 +14,18 @@ Lina’s Deli is a full-stack commerce portal that showcases premium charcuterie
 
 ---
 
+## Screenshots
+
+_Add illustrative screenshots here:_
+
+- `![Home Hero](<img width="1408" height="762" alt="Screenshot 2025-11-28 at 4 33 16 PM" src="https://github.com/user-attachments/assets/b648ead3-12be-48b6-98d0-407307a7c89a" />)`
+- `![Menu Grid](docs/screenshots/menu-grid.png)`
+- `![Staff Order Dashboard](docs/screenshots/staff-orders.png)`
+
+(Replace placeholders with actual captures.)
+
+---
+
 ## Tech Stack
 
 | Layer      | Technologies                                                                 |
@@ -121,17 +133,6 @@ Ensure the backend exposes APIs at the base URL expected by the frontend (`VITE_
 - Ensure environment variables are supplied at build time or via host-specific configuration.
 - Backend can be deployed separately (e.g., AWS Elastic Beanstalk, Render, or a traditional VM) and should expose HTTPS endpoints to the frontend.
 
----
-
-## Screenshots
-
-_Add illustrative screenshots here:_
-
-- `![Home Hero](docs/screenshots/home-hero.png)`
-- `![Menu Grid](docs/screenshots/menu-grid.png)`
-- `![Staff Order Dashboard](docs/screenshots/staff-orders.png)`
-
-(Replace placeholders with actual captures.)
 
 ---
 
