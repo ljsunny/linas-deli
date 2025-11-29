@@ -28,6 +28,9 @@ _Add illustrative screen shots here:_
 ---
 
 ## Tech Stack
+![React](https://img.shields.io/badge/React-19-blue)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3-green)
+![Supabase](https://img.shields.io/badge/Supabase-Postgres-green)
 
 | Layer      | Technologies                                                                 |
 |------------|-------------------------------------------------------------------------------|
