@@ -18,7 +18,7 @@ Lina’s Deli is a full-stack commerce portal that showcases premium charcuterie
 
 _Add illustrative screenshots here:_
 
-- `![Home Hero](<img width="1408" height="762" alt="Screenshot 2025-11-28 at 4 33 16 PM" src="https://github.com/user-attachments/assets/b648ead3-12be-48b6-98d0-407307a7c89a" />)`
+- `![Home Hero](https://github.com/user-attachments/assets/5184438f-460c-4329-899f-d3186b4e3eeb)`
 - `![Menu Grid](docs/screenshots/menu-grid.png)`
 - `![Staff Order Dashboard](docs/screenshots/staff-orders.png)`
 
