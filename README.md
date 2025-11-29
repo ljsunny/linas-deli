@@ -16,16 +16,16 @@ Lina’s Deli is a full-stack commerce portal that showcases premium charcuterie
 
 ## Screenshots
 
-_Add illustrative screenshots here:_
+_Add illustrative screen shots here:_
 
-- ![Home Hero](https://github.com/user-attachments/assets/5184438f-460c-4329-899f-d3186b4e3eeb)
-- ![Menu Grid](https://github.com/user-attachments/assets/21bc5cff-5def-4fcb-bba6-81a39eef88cf)
-- <img width="1406" height="760" alt="Screenshot 2025-11-28 at 4 34 48 PM" src="https://github.com/user-attachments/assets/457f2db0-ebc0-4482-95a0-a42f2a265fd6" />
-- <img width="1406" height="760" alt="Screenshot 2025-11-28 at 4 35 01 PM" src="https://github.com/user-attachments/assets/94e7baf5-0c19-4842-a16b-3a97b7948f14" />
+-<img width="700" alt="Home" src="https://github.com/user-attachments/assets/e3fc64f6-2a3d-49a6-852d-fe6690919a28" />
+- <img width="700" alt="Menu" src="https://github.com/user-attachments/assets/e0b344c6-a25c-404f-add7-2c2b92ad1c7f" />
+- <img width="700" alt="Order" src="https://github.com/user-attachments/assets/457f2db0-ebc0-4482-95a0-a42f2a265fd6" />
+- <img width="700" alt="Order Form" src="https://github.com/user-attachments/assets/94e7baf5-0c19-4842-a16b-3a97b7948f14" />
 
-- <img width="1406" height="758" alt="Screenshot 2025-11-28 at 4 51 29 PM" src="https://github.com/user-attachments/assets/7d04f849-b80e-4585-823c-bb8b0cbebc2f" />
-- <img width="1406" height="758" alt="Screenshot 2025-11-28 at 4 51 43 PM" src="https://github.com/user-attachments/assets/1f442238-37f7-4103-bf96-bb60298c2604" />
-- <img width="1406" height="758" alt="Screenshot 2025-11-28 at 4 51 50 PM" src="https://github.com/user-attachments/assets/5715ac9a-2be2-44d3-994c-fc48123a43ce" />
+- <img width="700" alt="Staff Login" src="https://github.com/user-attachments/assets/7d04f849-b80e-4585-823c-bb8b0cbebc2f" />
+- <img width="700" alt="Staff menu" src="https://github.com/user-attachments/assets/1f442238-37f7-4103-bf96-bb60298c2604" />
+- <img width="700" alt="Staff Order" src="https://github.com/user-attachments/assets/5715ac9a-2be2-44d3-994c-fc48123a43ce" />
 
 
 
