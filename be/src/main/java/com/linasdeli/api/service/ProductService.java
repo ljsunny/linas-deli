@@ -247,7 +247,16 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Page<ProductWithDetailsDto> getProductsForCustomer(Pageable pageable, String category, String keyword) {
         Page<Long> idsPage = productRepository.findProductIds(keyword, category, pageable);
+
+        if (idsPage.isEmpty()) {
+            return new PageImpl<>(List.of(), pageable, 0);
+        }
+
+        // 🔥 Lazy 방지: Fetch Join 적용된 메서드로 가져오기
         List<Product> products = productRepository.findProductsWithDetails(idsPage.getContent());
+
+        // ⭐ allergies Lazy 초기화 강제
+        products.forEach(p -> p.getAllergies().size());
 
         List<ProductWithDetailsDto> dtoList = products.stream()
                 .map(p -> new ProductWithDetailsDto(
@@ -269,7 +278,6 @@ public class ProductService {
                 .collect(Collectors.toList());
 
         return new PageImpl<>(dtoList, pageable, idsPage.getTotalElements());
-
     }
 
 

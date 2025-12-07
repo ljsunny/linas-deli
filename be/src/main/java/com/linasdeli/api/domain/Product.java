@@ -8,6 +8,8 @@ import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * Product entity - Stores product information - Others only use this table
  */
@@ -29,6 +31,7 @@ public class Product {
     @CollectionTable(name = "product_allergy", joinColumns = @JoinColumn(name = "pid"))
     @Enumerated(EnumType.STRING)
     @Column(name = "allergy_type")
+    @JsonIgnore
     private List<AllergyType> allergies;
 
     private Boolean pasteurized;
